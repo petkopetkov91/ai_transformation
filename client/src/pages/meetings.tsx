@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +8,14 @@ import { Calendar, Clock, Users, FileText, Plus, Bot } from "lucide-react";
 import { t } from "@/lib/translations";
 import { apiRequest } from "@/lib/queryClient";
 import type { Meeting } from "@shared/schema";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { insertMeetingSchema } from "@shared/schema";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 export default function Meetings() {
   const queryClient = useQueryClient();
@@ -24,6 +32,46 @@ export default function Meetings() {
       queryClient.invalidateQueries({ queryKey: ["/api/meetings"] });
     },
   });
+
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const createMeetingMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof insertMeetingSchema>) => {
+      const response = await apiRequest("POST", "/api/meetings", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/meetings"] });
+      setIsDialogOpen(false);
+      form.reset();
+    },
+  });
+
+  const form = useForm<z.infer<typeof insertMeetingSchema>>({
+    resolver: zodResolver(insertMeetingSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      scheduledAt: "",
+      duration: 60,
+      status: "scheduled",
+      participants: [],
+      notes: "",
+      aiSummary: "",
+    },
+  });
+
+  const onSubmit = (data: z.infer<typeof insertMeetingSchema>) => {
+    // Convert participants from comma-separated string to array if needed
+    let participants = data.participants;
+    if (typeof participants === "string") {
+      participants = participants
+        .split(",")
+        .map((p) => p.trim())
+        .filter(Boolean);
+    }
+    createMeetingMutation.mutate({ ...data, participants });
+  };
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString("bg-BG", {
@@ -127,11 +175,102 @@ export default function Meetings() {
             <Button variant="outline">Планирани</Button>
             <Button variant="outline">Завършени</Button>
           </div>
-          <Button className="bg-primary hover:bg-primary/90">
+          <Button className="bg-primary hover:bg-primary/90" onClick={() => setIsDialogOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Нова среща
           </Button>
         </div>
+
+        {/* Dialog for creating a new meeting */}
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Създаване на нова среща</DialogTitle>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Заглавие</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Въведете заглавие на срещата" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Описание</FormLabel>
+                      <FormControl>
+                        <Textarea {...field} placeholder="Описание на срещата" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="scheduledAt"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Дата и час</FormLabel>
+                      <FormControl>
+                        <Input type="datetime-local" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="duration"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Продължителност (минути)</FormLabel>
+                      <FormControl>
+                        <Input type="number" min={1} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="participants"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Участници (разделени със запетая)</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          value={Array.isArray(field.value) ? field.value.join(", ") : field.value}
+                          onChange={(e) => field.onChange(e.target.value)}
+                          placeholder="Иван Петров, Мария Георгиева"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    Отказ
+                  </Button>
+                  <Button type="submit" disabled={createMeetingMutation.isPending}>
+                    {createMeetingMutation.isPending ? "Създаване..." : "Създай"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
 
         {isLoading ? (
           <div className="space-y-4">
