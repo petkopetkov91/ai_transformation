@@ -94,6 +94,15 @@ export const translations = {
   ppt: "PPT",
   pptx: "PPTX",
   txt: "TXT",
+
+  // Departments
+  departments: "Отдели",
+  marketing: "Маркетинг",
+  hr: "Човешки ресурси",
+  newCars: "Нови автомобили",
+  service: "Сервиз",
+  spareParts: "Резервни части",
+  customerService: "Клиентско обслужване",
 };
 
 export function t(key: keyof typeof translations): string {

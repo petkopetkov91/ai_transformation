@@ -14,6 +14,15 @@ import {
   User,
   MoreVertical,
 } from "lucide-react";
+import {
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton
+} from "@/components/ui/sidebar";
 
 const navigationItems = [
   { href: "/", icon: LayoutDashboard, label: t("dashboard") },
@@ -66,6 +75,47 @@ export function Sidebar() {
             </Link>
           );
         })}
+
+        {/* Отдели Section */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Отдели</SidebarGroupLabel>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuSub>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton href="/departments/marketing">
+                    {t("marketing")}
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton href="/departments/hr">
+                    {t("hr")}
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton href="/departments/new-cars">
+                    {t("newCars")}
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton href="/departments/service">
+                    {t("service")}
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton href="/departments/spare-parts">
+                    {t("spareParts")}
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton href="/departments/customer-service">
+                    {t("customerService")}
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+              </SidebarMenuSub>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
       </nav>
 
       {/* User Profile */}
@@ -75,7 +125,7 @@ export function Sidebar() {
             <User className="text-gray-600 w-5 h-5" />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-medium text-gray-900">Иван Петров</p>
+            <p className="text-sm font-medium text-gray-900">Петко Петков</p>
             <p className="text-xs text-gray-500">{t("transformationManager")}</p>
           </div>
           <button className="text-gray-400 hover:text-gray-600">
